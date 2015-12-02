@@ -183,7 +183,7 @@ class PlainTextFormatter
                                 appearanceStyle.getFontSize(), 
                                 width
                             );
-                    processLines(lines);
+                    processLines(lines, textContent.getParagraphs().indexOf(paragraph) == 0);
                 }
                 else
                 {
@@ -223,15 +223,17 @@ class PlainTextFormatter
      * commands for the content stream to show the text.
      * 
      * @param lines the lines to process.
+     * @param isFirstParagraph 
      * @throws IOException if there is an error writing to the stream.
      */
-    private void processLines(List<Line> lines) throws IOException
+    private void processLines(List<Line> lines, boolean isFirstParagraph) throws IOException
     {
         float wordWidth = 0f;
 
         float lastPos = 0f;
         float startOffset = 0f;
         float interWordSpacing = 0f;
+        float originalHorizontaloffset = horizontalOffset;
 
         for (Line line : lines)
         {
@@ -254,20 +256,22 @@ class PlainTextFormatter
             }
             
             float offset = -lastPos + startOffset + horizontalOffset;
+            boolean isFirstLine = lines.indexOf(line) == 0;
             
-            if (lines.indexOf(line) == 0)
-            {
+            if (isFirstLine) {
+                horizontalOffset = 0f;
+            }
+            
+            if (isFirstLine && isFirstParagraph) {
                 contents.newLineAtOffset(offset, verticalOffset);
                 // reset the initial verticalOffset
                 verticalOffset = 0f;
-                horizontalOffset = 0f;
-            }
-            else
-            {
+            } else {
                 // keep the last position
                 verticalOffset = verticalOffset - appearanceStyle.getLeading();
                 contents.newLineAtOffset(offset, -appearanceStyle.getLeading());
             }
+
             lastPos = startOffset; 
 
             List<Word> words = line.getWords();
@@ -283,5 +287,6 @@ class PlainTextFormatter
             }
         }
         horizontalOffset = horizontalOffset - lastPos;
+        
     }
 }
